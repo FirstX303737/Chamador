@@ -35,13 +35,14 @@ namespace Chamador.CLI
 
             while (true)
             {
-                Parallel.ForEach(instanciasRobos, (robo) => 
+                Parallel.ForEach(instanciasRobos, async (robo) => 
                 {
+                    
                     if(DateTime.Compare(robo.UltimaVezRodou.AddMilliseconds(robo.SleepTime), DateTime.Now) > 0)
                     {
                         System.Console.WriteLine($"{robo.UltimaVezRodou.ToString("yyyy-MM-dd")}");
                     }
-                    robo.Extrair(config, serviceProvider);
+                    await robo.Extrair(config, serviceProvider);
                     robo.UltimaVezRodou = DateTime.Now;
                 });
             }

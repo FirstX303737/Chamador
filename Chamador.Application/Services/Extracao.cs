@@ -11,7 +11,7 @@ namespace Chamador.Application.Services
         {
             switch (roboId)
             {
-                case "1":
+                case "21":
                     return new Robo01(sleepTime, path);
                 case "2":
                     return new Robo02(sleepTime, path);

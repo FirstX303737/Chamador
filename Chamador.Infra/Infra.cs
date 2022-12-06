@@ -23,6 +23,7 @@ namespace Chamador.Infra
 
 #if local
             var HttpClient = new HttpClient(clientHandler);
+            HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 #else
             var HttpClient = new HttpClient();
 #endif
@@ -40,7 +41,7 @@ namespace Chamador.Infra
                     break;
 
                 case "POST":
-                    resposta = await HttpClient.PostAsync($"{baseUrl.ToString()}{rota}", new StringContent(JsonConvert.SerializeObject(body), UTF8Encoding.UTF8, "application/json"));
+                    resposta = await HttpClient.PostAsync($"{baseUrl.ToString()}{rota}", new StringContent(JsonConvert.SerializeObject(body), UTF8Encoding.UTF8, "application/json"));                    
                     serviceResult = await DeserializaResposta(resposta, baseUrl, rota, responseModel, body);
                     break;
                     
@@ -53,6 +54,7 @@ namespace Chamador.Infra
             }
             catch (Exception ex)
             {
+                // CW
                  var error = new Error();
                  error.Exception = ex.InnerException.ToString();
                  error.Message = ex.Message;;
@@ -63,23 +65,32 @@ namespace Chamador.Infra
             }
         }
 
-        private async Task<ServiceResult<ResponseModel>> DeserializaResposta(HttpResponseMessage resposta, Uri baseUrl, string rota,ResponseModel responseModel, RequestModel body = null)
+        private async Task<ServiceResult<ResponseModel>> DeserializaResposta(HttpResponseMessage resposta, Uri baseUrl, string rota, ResponseModel responseModel, RequestModel body = null)
         {
             var serviceResult = new ServiceResult<ResponseModel>();
-            if (resposta.StatusCode == HttpStatusCode.OK)
-            {
-                serviceResult.Result = JsonConvert.DeserializeObject(await resposta.Content.ReadAsStringAsync(), responseModel.GetType()) as ResponseModel;// .DeserializeObject<ResponseModel>(await resposta.Content.ReadAsStringAsync());
-            }
-            else
-            {
-                if(body == null)
-                {
-                    serviceResult.Error = new Error{ Message = $"Erro ao receber resposta do servidor - UrlBase: {baseUrl} Rota: {rota} Status: {resposta.StatusCode}" };
+            try{
+                if (resposta.StatusCode == HttpStatusCode.OK)
+                {                
+                    serviceResult.Result = JsonConvert.DeserializeObject(await resposta.Content.ReadAsStringAsync(), responseModel.GetType()) as ResponseModel;
                 }
                 else
                 {
-                    serviceResult.Error = new Error{ Message = $"Erro ao receber resposta do servidor - UrlBase: {baseUrl} Rota: {rota} Corpo: {body} Status: {resposta.StatusCode}" };
-                }                
+                    if(body == null)
+                    {
+                        serviceResult.Error = new Error{ Message = $"Erro ao receber resposta do servidor - UrlBase: {baseUrl} Rota: {rota} Status: {resposta.StatusCode}" };
+                    }
+                    else
+                    {
+                        serviceResult.Error = new Error{ Message = $"Erro ao receber resposta do servidor - UrlBase: {baseUrl} Rota: {rota} Corpo: {body} Status: {resposta.StatusCode}" };
+                    }                
+                }
+            }
+            catch(Exception ex)
+            {                
+                var error = new Error();
+                error.Exception = ex.InnerException.ToString(); 
+                error.Message = $"Erro durante a deserializacao da resposta da requisicao Url base {baseUrl} para a rota {rota}  ex.Message: {ex.Message} ";
+                serviceResult.Error = error;
             }
             return serviceResult;
         }

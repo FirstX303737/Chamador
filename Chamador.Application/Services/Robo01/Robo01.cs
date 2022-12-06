@@ -23,6 +23,7 @@ namespace Chamador.Application.Services.Robos
         {
             this.SleepTime = sleepTime;
             this.path = path;
+            this.UltimaVezRodou = DateTime.Now;
         }
 
         public async Task<ResponseModel> Extrair(IConfiguration configuration, ServiceProvider services)
@@ -36,7 +37,8 @@ namespace Chamador.Application.Services.Robos
                 Properties = "Funcional"
             };
             var resultado = Task.Run<ServiceResult<ResponseModel>> (async () => {
-               return await eventService.Exchange(HttpMethod.Post, new Uri("http://demo0928808.mockable.io"),"/robo01",string.Empty, new Robo01ResponseModel(), corpo);
+               return await eventService.Exchange(HttpMethod.Post, new Uri("https://localhost:5001"),"weatherforecast",string.Empty, new Robo01ResponseModel(), corpo);
+               //return await eventService.Exchange(HttpMethod.Post, new Uri("http://demo0928808.mockable.io"),"/robo01",string.Empty, new Robo01ResponseModel(), corpo);
             });
 
             await Task.WhenAll(new Task[1]{resultado});
